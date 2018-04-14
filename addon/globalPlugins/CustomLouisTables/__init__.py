@@ -5,20 +5,23 @@
 # See the file COPYING.txt for more details.
 
 import inspect
-import os
-import shutil
-import sys
-
 
 import config
 import globalPluginHandler
-import globalVars
+import louis
 import ui
-import braille
-import braille_custom
 
-origin_regions = {i: getattr(braille, i) for i in dir(braille) if inspect.isclass(getattr(braille, i)) and issubclass(getattr(braille, i), braille.Region) }
-custom_regions = {i: getattr(braille_custom, i) for i in dir(braille_custom) if inspect.isclass(getattr(braille_custom, i)) and issubclass(getattr(braille_custom, i), braille_custom.Region) }
+from decorator import customTableList
+
+origin_translate = louis.translate
+origin_translateString = louis.translateString
+origin_backTranslate = louis.backTranslate
+origin_backTranslateString = louis.backTranslateString
+
+custom_translate = customTableList(louis.translate)
+custom_translateString = customTableList(louis.translateString)
+custom_backTranslate = customTableList(louis.backTranslate)
+custom_backTranslateString = customTableList(louis.backTranslateString)
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	scriptCategory = _("CustomLouisTables")
@@ -33,11 +36,15 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			config.conf["CustomLouisTables"]["toggle"] = "On"
 
 		if config.conf["CustomLouisTables"]["toggle"] == "On":
-			for key, value in custom_regions.items():
-				setattr(braille, key, value)
+			louis.translate = custom_translate
+			louis.translateString = custom_translateString
+			louis.backTranslate = custom_backTranslate
+			louis.backTranslateString = custom_backTranslateString
 		else:
-			for key, value in origin_regions.items():
-				setattr(braille, key, value)
+			louis.translate = origin_translate
+			louis.translateString = origin_translateString
+			louis.backTranslate = origin_backTranslate
+			louis.backTranslateString = origin_backTranslateString
 
 	def script_toggle(self, gesture):
 
@@ -48,12 +55,16 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			config.conf["CustomLouisTables"]["toggle"] = "On"
 
 		if config.conf["CustomLouisTables"]["toggle"] == "On":
-			for key, value in origin_regions.items():
-				setattr(braille, key, value)
+			louis.translate = origin_translate
+			louis.translateString = origin_translateString
+			louis.backTranslate = origin_backTranslate
+			louis.backTranslateString = origin_backTranslateString
 			config.conf["CustomLouisTables"]["toggle"] = "Off"
 		else:
-			for key, value in custom_regions.items():
-				setattr(braille, key, value)
+			louis.translate = custom_translate
+			louis.translateString = custom_translateString
+			louis.backTranslate = custom_backTranslate
+			louis.backTranslateString = custom_backTranslateString
 			config.conf["CustomLouisTables"]["toggle"] = "On"
 		ui.message(config.conf["CustomLouisTables"]["toggle"])
 	script_toggle.category = scriptCategory
